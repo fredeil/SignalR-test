@@ -43,20 +43,20 @@ namespace WebSocketTest
         public override Task OnConnectedAsync() 
         {
             Interlocked.Increment(ref numConnections);
-            Console.WriteLine($"New connection({numConnections}): "+ Context.ConnectionId);
+            Console.WriteLine($"New connection({numConnections}): " + Context.ConnectionId.Substring(0,5));
             return Task.CompletedTask;
         }
 
         public override Task OnDisconnectedAsync(Exception exception)
         {
             Interlocked.Decrement(ref numConnections);
-            Console.WriteLine("Disconnected: "+ Context.ConnectionId);
+            Console.WriteLine("Disconnected: " + Context.ConnectionId.Substring(0,5));
             return Task.CompletedTask;
         }
 
-        public ChannelReader<string> StreamEcho(ChannelReader<string> source)
+        public ChannelReader<byte[]> StreamEcho(ChannelReader<byte[]> source)
         {
-            var output = Channel.CreateUnbounded<string>();
+            var output = Channel.CreateUnbounded<byte[]>();
 
             _ = Task.Run(async () =>
             {
@@ -64,7 +64,9 @@ namespace WebSocketTest
                 {
                     while (source.TryRead(out var item))
                     {
-                        await output.Writer.WriteAsync($"[{Context.ConnectionId.Substring(0, 5)}]: " + item);
+
+                        Console.WriteLine($"Recv: {item.Length} bytes.");
+                        await output.Writer.WriteAsync(item);
                     }
                 }
 

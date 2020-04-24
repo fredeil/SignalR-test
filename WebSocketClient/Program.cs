@@ -58,22 +58,22 @@ namespace WebSocketClient
 
         public static async Task StreamingEcho(HubConnection connection, CancellationToken cancellationToken)
         {
-            var channel = Channel.CreateUnbounded<string>();
+            var channel = Channel.CreateUnbounded<byte[]>();
 
             _ = Task.Run(async () =>
             {
                 for (var i = 0; i < 5; i++)
                 {
-                    await channel.Writer.WriteAsync(RandomString(4 * 1024), cancellationToken);
+                    await channel.Writer.WriteAsync(RandomBytes(1024 * 4), cancellationToken);
                 }
             });
 
-            var outputs = await connection.StreamAsChannelAsync<string>("StreamEcho", channel.Reader, cancellationToken);
+            var outputs = await connection.StreamAsChannelAsync<byte[]>("StreamEcho", channel.Reader, cancellationToken);
             while (await outputs.WaitToReadAsync(cancellationToken))
             {
                 while (outputs.TryRead(out var item))
                 {
-                    Console.WriteLine($"Recv: '{item}'.");
+                    Console.WriteLine($"Recv: '{item.Length} bytes'.");
                 }
             }
         }
@@ -94,6 +94,16 @@ namespace WebSocketClient
             }
 
             return res.ToString();
+        }
+
+        static byte[] RandomBytes(int length)
+        {
+            var buf = new byte[length];
+            using var rng = new RNGCryptoServiceProvider();
+
+            rng.GetBytes(buf);
+
+            return buf;
         }
     }
 }
