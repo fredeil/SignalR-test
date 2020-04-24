@@ -22,6 +22,7 @@ namespace WebSocketTest
             {
                 // Faster pings for testing
                 options.KeepAliveInterval = TimeSpan.FromSeconds(5);
+                options.ClientTimeoutInterval = TimeSpan.FromSeconds(60);
             });
         }
 
